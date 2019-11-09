@@ -1,6 +1,16 @@
 macOS Unlocker V3.0 for VMware Workstation
 ==========================================
 
+**************************************************************
+************************* READ HERE: *************************
+
+WINDOWS USERS: Get the tool from the Releases section, you will get a bundled python distribution that avoids the virus warnings and python not found etc.
+
+LINUX USERS: No bundled python for you, but make sure you have python 3.0+ installed. If you have errors like "Python not supported" but you have python installed, change the lines inside of lnx-install.sh from 'python xxxxxxx.py' to 'python3.7 xxxxxxx.py' (if you have python 3.7 installed, otherwise try python3 or other stuff)
+
+**************************************************************
+**************************************************************
+
 +-----------------------------------------------------------------------------+
 | IMPORTANT:                                                                  |
 | ==========                                                                  |
@@ -103,6 +113,6 @@ History
 02/10/18 3.0.1 - Fixed gettools.py to work with Python 3 and correctly download darwinPre15.iso
 10/10/18 3.0.2 - Fixed false positives from anti-virus software with Windows executables
                - Allow Python 2 and 3 to run the Python code from Bash scripts
-
+10/24/19 3.0.3 - Fixed unlocker and gettools for VMware Workstation 15.5
 
 (c) 2011-2018 Dave Parsons

@@ -30,6 +30,7 @@ import shutil
 import tarfile
 import zipfile
 import time
+import urllib
 
 try:
     # For Python 3.0 and later
@@ -45,8 +46,6 @@ except ImportError:
     from urllib2 import urlopen
     # noinspection PyCompatibility
     from HTMLParser import HTMLParser
-    # noinspection PyCompatibility
-    from urllib import urlretrieve
 
 
 # Parse the Fusion directory page
@@ -67,6 +66,13 @@ class CDSParser(HTMLParser):
     def clean(self):
         self.HTMLDATA = []
 
+if sys.version_info > (3, 0):
+# Python 3 code in this block
+	pass
+else:
+	# Python 2 code in this block
+	class MyURLopener(urllib.FancyURLopener):
+		http_error_default = urllib.URLopener.http_error_default
 
 def convertpath(path):
     # OS path separator replacement funciton
@@ -86,6 +92,29 @@ def reporthook(count, block_size, total_size):
 					(percent, progress_size / (1024 * 1024), speed, time_remaining))
 	sys.stdout.flush()
 
+def CheckToolsFilesExists(dest):
+	filesFound = os.path.exists(convertpath(dest + '/tools/darwin.iso')) & os.path.exists(convertpath(dest + '/tools/darwinPre15.iso'))
+	askMsg = 'You already have downloaded the tools. Download again?[y/n]'
+
+	if filesFound:
+		while True:
+			# Ask if the user want to download again
+			if sys.version_info > (3, 0):
+			# Python 3 code in this block
+				userResponse = input(askMsg)
+			else:
+				# Python 2 code in this block
+				userResponse = raw_input(askMsg)
+
+			if str(userResponse).upper() == 'Y':
+				return False
+			elif str(userResponse).upper() == 'N':
+				return True
+			else:
+				print('Must enter y or n. You pressed: ' + str(userResponse).upper())
+	else:
+		return False
+
 def main():
 
 	# Check minimal Python version is 2.7
@@ -94,6 +123,11 @@ def main():
 		sys.exit(1)
 
 	dest = os.path.dirname(os.path.abspath(__file__))
+
+	# Try local file check
+	if(CheckToolsFilesExists(dest)):
+		# User as already download the tools and chosen not doing again
+		return
 
 	# Re-create the tools folder
 	shutil.rmtree(dest + '/tools', True)
@@ -134,17 +168,28 @@ def main():
 	print('Retrieving Darwin tools from: ' + urlpost15)
 	try:
 		# Try to get tools from packages folder
-		urlretrieve(urlpost15, convertpath(dest + '/tools/com.vmware.fusion.tools.darwin.zip.tar'))
+			if sys.version_info > (3, 0):
+
+				# Python 3 code in this block
+				urlretrieve(urlpost15, convertpath(dest + '/tools/com.vmware.fusion.tools.darwin.zip.tar'), reporthook)
+			else:
+				# Python 2 code in this block
+				(f,headers)=MyURLopener().retrieve(urlpost15, convertpath(dest + '/tools/com.vmware.fusion.tools.darwin.zip.tar'), reporthook)
 
 	except:
-		# No tools found, get em from the core tar
+		# No tools found, get them from the core tar
 		print('Tools aren\'t here... Be patient while I download and' +
 			  ' give a look into the core.vmware.fusion.tar file')
 		urlcoretar = url + lastVersion + '/core/com.vmware.fusion.zip.tar'
 			  
 		# Get the main core file
 		try:
-			urlretrieve(urlcoretar, convertpath(dest + '/tools/com.vmware.fusion.zip.tar'), reporthook)
+			if sys.version_info > (3, 0):
+				# Python 3 code in this block
+				urlretrieve(urlcoretar, convertpath(dest + '/tools/com.vmware.fusion.zip.tar'), reporthook)
+			else:
+				# Python 2 code in this block
+				(f,headers)=MyURLopener().retrieve(urlcoretar, convertpath(dest + '/tools/com.vmware.fusion.zip.tar'), reporthook)
 		except:
 			print('Couldn\'t find tools')
 			return
@@ -171,10 +216,10 @@ def main():
 		os.remove(convertpath(dest + '/tools/com.vmware.fusion.zip.tar'))
 		os.remove(convertpath(dest + '/tools/com.vmware.fusion.zip'))
 		
-		print('Tools retrieved successfully')
+		print('Tools from core retrieved successfully')
 		return
 	
-	# Tools have been found, go with the normal way
+	# Tools have been found in the packages folder, go with the normal way
 	
 	# Extract the tar to zip
 	tar = tarfile.open(convertpath(dest + '/tools/com.vmware.fusion.tools.darwin.zip.tar'), 'r')
@@ -221,6 +266,8 @@ def main():
 	shutil.rmtree(convertpath(dest + '/tools/payload'), True)
 	os.remove(convertpath(dest + '/tools/com.vmware.fusion.tools.darwinPre15.zip.tar'))
 	os.remove(convertpath(dest + '/tools/com.vmware.fusion.tools.darwinPre15.zip'))
+
+	print('Tools from package retrieved successfully')
 
 if __name__ == '__main__':
     main()
